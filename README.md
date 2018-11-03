@@ -32,7 +32,10 @@ function load (file, cb) {
 Ironically, the prototype feature makes this module twice as
 complicated as necessary.
 
-To check whether you function has been called, use `fn.called`:
+To check whether you function has been called, use `fn.called`. Once the
+function is called for the first time the return value of the original
+function is saved in `fn.value` and subsequent calls will continue to
+return this value.
 
 ```javascript
 var once = require('once')
@@ -45,4 +48,32 @@ function load (cb) {
     if (!cb.called) cb(new Error('not found'))
   })
 }
+```
+
+## `once.strict(func)`
+
+Throw an error if the function is called twice.
+
+Some functions are expected to be called only once. Using `once` for them would
+potentially hide logical errors.
+
+In the example below, the `greet` function has to call the callback only once:
+
+```javascript
+function greet (name, cb) {
+  // return is missing from the if statement
+  // when no name is passed, the callback is called twice
+  if (!name) cb('Hello anonymous')
+  cb('Hello ' + name)
+}
+
+function log (msg) {
+  console.log(msg)
+}
+
+// this will print 'Hello anonymous' but the logical error will be missed
+greet(null, once(msg))
+
+// once.strict will print 'Hello anonymous' and throw an error when the callback will be called the second time
+greet(null, once.strict(msg))
 ```
